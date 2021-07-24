@@ -231,6 +231,14 @@ const register = () => {
   buttonContainer.appendChild(button);
 };
 
+const interval = setInterval(() => {
+  if (document.querySelector('.css-5aeyry.e1h77j9v3') !== null) {
+    clearInterval(interval);
+    register();
+    return;
+  }
+}, 10);
+
 chrome.runtime.onMessage.addListener((req) => {
   if (req === 'url') {
     const interval = setInterval(() => {
