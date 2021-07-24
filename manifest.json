@@ -1,0 +1,28 @@
+{
+  "manifest_version": 2,
+  "name": "entry-image",
+  "version": "1.0",
+  "description": "엔트리 커뮤니티에 이미지를 올려보세요!",
+  "icons": {
+    "48": "icons/icon-48.png",
+    "1024": "icons/icon-1024.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://playentry.org/community/entrystory/list*"],
+      "js": ["entry-image.js"],
+      "css": ["styles.css"],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "permissions": ["https://playentry.org/*", "tabs"],
+  "applications": {
+    "gecko": {
+      "id": "entry-image@tica.fun"
+    }
+  }
+}
