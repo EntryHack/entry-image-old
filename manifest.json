@@ -9,10 +9,9 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://playentry.org/community/entrystory/list*"],
+      "matches": ["https://playentry.org/community/entrystory/*"],
       "js": ["entry-image.js"],
-      "css": ["styles.css"],
-      "run_at": "document_start"
+      "css": ["styles.css"]
     }
   ],
   "background": {

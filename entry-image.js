@@ -138,51 +138,53 @@ const render = () => {
       const tmp = el.innerHTML.split(' ');
       const text = tmp.shift();
       const data = decode(tmp.join(''));
+      console.log(data);
+      const json = await (async () => {
+        if (data.trim().startsWith('{')) return JSON.parse(decode(tmp.join('')).split('}')[0] + '}');
+        else {
+          const array = data.split(',');
+          const name = await new Promise((res) =>
+            chrome.runtime.sendMessage(`http://entryimage.dothome.co.kr/get.php?index=${array[0]}`, (data) => res(data))
+          );
 
-      if (data.trim().startsWith('{')) {
-        const json = JSON.parse(decode(tmp.join('')).split('}')[0] + '}');
-
-        el.innerHTML = text;
-        el.appendChild(clickToShow(json));
-      } else {
-        console.log(data);
-        const array = data.split(',');
-        const name = await new Promise((res) =>
-          chrome.runtime.sendMessage(`http://entryimage.dothome.co.kr/get.php?index=${array[0]}`, (data) => res(data))
-        );
-
-        console.log(name);
-
-        const json = {
-          name,
-          type: Number(array[1]),
-        };
-
-        console.log(json);
-
-        el.innerHTML = text;
-        el.appendChild(clickToShow(json));
-      }
+          return {
+            name,
+            type: Number(array[1]),
+          };
+        }
+      })();
+      el.innerHTML = text.replace(/( |\u200c|\u200b|‍)/, ' ');
+      el.appendChild(clickToShow(json));
     }
   });
 };
 
 const register = () => {
-  render();
+  const tmp = setInterval(() => {
+    const postListLength = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20')).map((el) =>
+      el.querySelector('.css-1wpssus.e1i41bku0')
+    ).length;
+    if (prevPostListLength + 10 !== postListLength) return;
+    prevPostListLength = postListLength;
+    clearInterval(tmp);
+    render();
+  }, 10);
 
   let prevPostListLength = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20')).map((el) =>
     el.querySelector('.css-1wpssus.e1i41bku0')
   ).length;
 
-  document.querySelector('button.css-1cmqu6s.e18x7bg06').onclick = () =>
-    setInterval(() => {
+  document.querySelector('button.css-1cmqu6s.e18x7bg06').onclick = () => {
+    const tmp = setInterval(() => {
       const postListLength = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20')).map((el) =>
         el.querySelector('.css-1wpssus.e1i41bku0')
       ).length;
       if (prevPostListLength + 10 !== postListLength) return;
       prevPostListLength = postListLength;
+      clearInterval(tmp);
       render();
     }, 10);
+  };
 
   const buttonContainer = document.querySelector('.css-5aeyry.e1h77j9v3');
 
@@ -241,7 +243,7 @@ const register = () => {
               }`,
                 operationName: 'CREATE_ENTRYSTORY',
                 variables: {
-                  content: document.getElementById('Write').value + (imageData === undefined ? '' : '‍  ' + encode(await upload(imageData))),
+                  content: document.getElementById('Write').value + (imageData === undefined ? '' : '‍ ' + encode(await upload(imageData))),
                 },
               }),
             })
@@ -284,7 +286,10 @@ const register = () => {
   buttonContainer.appendChild(button);
 };
 
+console.log('zz');
+
 const interval = setInterval(() => {
+  console.log('zz');
   if (document.querySelector('.css-5aeyry.e1h77j9v3') !== null) {
     clearInterval(interval);
     register();
