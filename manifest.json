@@ -22,7 +22,7 @@
   "background": {
     "scripts": ["background.js"]
   },
-  "permissions": ["https://playentry.org/*", "http://entryimage.dothome.co.kr/*", "tabs"],
+  "permissions": ["https://playentry.org/*", "http://entryimage.dothome.co.kr/*", "tabs", "storage"],
   "applications": {
     "gecko": {
       "id": "entry-image@tica.fun"

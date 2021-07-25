@@ -31,6 +31,37 @@ const toBase64 = async (file) =>
     reader.onerror = (error) => reject(error);
   });
 
+const oldUpload = async (url) => {
+  const formData = new FormData();
+
+  const blob = await (await fetch(url)).blob();
+
+  formData.append('file', blob);
+  formData.append('type', 'notcompress');
+
+  const data = await (
+    await fetch('https://playentry.org/rest/picture', {
+      method: 'POST',
+      body: formData,
+    })
+  ).json();
+  return JSON.stringify({
+    name: data.filename,
+    type:
+      data.imageType === 'png'
+        ? 1
+        : data.imageType === 'jpg'
+        ? 2
+        : data.imageType === 'jpeg'
+        ? 3
+        : data.imageType === 'gif'
+        ? 4
+        : data.imageType === 'webp'
+        ? 5
+        : data.imageType,
+  });
+};
+
 const upload = async (url) => {
   const formData = new FormData();
 
@@ -46,53 +77,27 @@ const upload = async (url) => {
     })
   ).json();
   const id = await new Promise((res) =>
-    chrome.runtime.sendMessage(`http://entryimage.dothome.co.kr/add.php?id=${data.filename}`, (data) => res(data))
+    chrome.runtime.sendMessage(
+      {
+        url: `http://entryimage.dothome.co.kr/add.php?id=${data.filename}|${
+          data.imageType === 'png'
+            ? 1
+            : data.imageType === 'jpg'
+            ? 2
+            : data.imageType === 'jpeg'
+            ? 3
+            : data.imageType === 'gif'
+            ? 4
+            : data.imageType === 'webp'
+            ? 5
+            : data.imageType
+        }`,
+      },
+      (data) => res(data)
+    )
   );
 
-  return `${id},${
-    data.imageType === 'png'
-      ? 1
-      : data.imageType === 'jpg'
-      ? 2
-      : data.imageType === 'jpeg'
-      ? 3
-      : data.imageType === 'gif'
-      ? 4
-      : data.imageType === 'webp'
-      ? 5
-      : data.imageType
-  },`;
-};
-
-const oldUpload = async (url) => {
-  const formData = new FormData();
-
-  const blob = await (await fetch(url)).blob();
-
-  formData.append('file', blob);
-  formData.append('type', 'notcompress');
-
-  const data = await (
-    await fetch('https://playentry.org/rest/picture', {
-      method: 'POST',
-      body: formData,
-    })
-  ).json();
-  return {
-    name: data.filename,
-    type:
-      data.imageType === 'png'
-        ? 1
-        : data.imageType === 'jpg'
-        ? 2
-        : data.imageType === 'jpeg'
-        ? 3
-        : data.imageType === 'gif'
-        ? 4
-        : data.imageType === 'webp'
-        ? 5
-        : data.imageType,
-  };
+  return id;
 };
 
 const imageFromData = (data) => {
@@ -134,41 +139,46 @@ const render = () => {
   );
 
   postList.forEach(async (el) => {
-    if (el.innerHTML.includes(' ')) {
-      const tmp = el.innerHTML.split(' ');
-      const text = tmp.shift();
-      const data = decode(tmp.join(''));
-      console.log(data);
-      const json = await (async () => {
-        if (data.trim().startsWith('{')) return JSON.parse(decode(tmp.join('')).split('}')[0] + '}');
-        else {
-          const array = data.split(',');
-          const name = await new Promise((res) =>
-            chrome.runtime.sendMessage(`http://entryimage.dothome.co.kr/get.php?index=${array[0]}`, (data) => res(data))
-          );
+    try {
+      if (el.innerHTML.includes(' ') || el.innerHTML.includes('\u200a')) {
+        const tmp = el.innerHTML.split(el.innerHTML.includes('\u200a') ? '\u200a' : ' ');
+        const text = tmp.shift();
+        const data = decode(tmp.join(''));
+        const json = await (async () => {
+          if (data.trim().startsWith('{')) return JSON.parse(decode(tmp.join('')).split('}')[0] + '}');
+          else {
+            const array = data.split(',');
+            const tmp = (
+              await new Promise((res) =>
+                chrome.runtime.sendMessage({ url: `http://entryimage.dothome.co.kr/get.php?index=${array[0]}` }, (data) => res(data))
+              )
+            )
+              .split('|')
+              .flatMap((t) => t.split(','));
 
-          return {
-            name,
-            type: Number(array[1]),
-          };
-        }
-      })();
-      el.innerHTML = text.replace(/( |\u200c|\u200b|‍)/, ' ');
-      el.appendChild(clickToShow(json));
+            if (tmp === undefined) throw new Error();
+
+            const [name, type] = tmp;
+
+            return { name, type: Number(type) };
+          }
+        })();
+        el.innerHTML = text.replace(/( |\u200c|\u200b|‍)/, ' ');
+        el.appendChild(clickToShow(json));
+      }
+    } catch (_) {
+      console.log(_);
     }
   });
 };
 
-const register = () => {
-  const tmp = setInterval(() => {
-    const postListLength = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20')).map((el) =>
-      el.querySelector('.css-1wpssus.e1i41bku0')
-    ).length;
-    if (prevPostListLength + 10 !== postListLength) return;
-    prevPostListLength = postListLength;
-    clearInterval(tmp);
-    render();
-  }, 10);
+const register = async () => {
+  await new Promise((res) =>
+    setTimeout(() => {
+      render();
+      res();
+    }, 100)
+  );
 
   let prevPostListLength = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20')).map((el) =>
     el.querySelector('.css-1wpssus.e1i41bku0')
@@ -217,6 +227,8 @@ const register = () => {
           e.stopImmediatePropagation();
           e.preventDefault();
 
+          const { 'use-legacy': useLegacy } = await new Promise((res) => chrome.runtime.sendMessage({ key: 'use-legacy', method: 'get' }, res));
+
           const data = await (
             await fetch('https://playentry.org/graphql', {
               method: 'POST',
@@ -243,7 +255,11 @@ const register = () => {
               }`,
                 operationName: 'CREATE_ENTRYSTORY',
                 variables: {
-                  content: document.getElementById('Write').value + (imageData === undefined ? '' : '‍ ' + encode(await upload(imageData))),
+                  content:
+                    document.getElementById('Write').value +
+                    (imageData === undefined
+                      ? ''
+                      : (useLegacy ? '‍ ' : '\u200a') + encode(useLegacy ? await oldUpload(imageData) : await upload(imageData))),
                 },
               }),
             })
@@ -286,10 +302,7 @@ const register = () => {
   buttonContainer.appendChild(button);
 };
 
-console.log('zz');
-
 const interval = setInterval(() => {
-  console.log('zz');
   if (document.querySelector('.css-5aeyry.e1h77j9v3') !== null) {
     clearInterval(interval);
     register();
