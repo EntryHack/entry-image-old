@@ -241,7 +241,7 @@ const register = () => {
               }`,
                 operationName: 'CREATE_ENTRYSTORY',
                 variables: {
-                  content: document.getElementById('Write').value + (imageData === undefined ? '' : '‍ ' + encode(await upload(imageData))),
+                  content: document.getElementById('Write').value + (imageData === undefined ? '' : '‍  ' + encode(await upload(imageData))),
                 },
               }),
             })
