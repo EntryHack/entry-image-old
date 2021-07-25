@@ -64,6 +64,37 @@ const upload = async (url) => {
   },`;
 };
 
+const oldUpload = async (url) => {
+  const formData = new FormData();
+
+  const blob = await (await fetch(url)).blob();
+
+  formData.append('file', blob);
+  formData.append('type', 'notcompress');
+
+  const data = await (
+    await fetch('https://playentry.org/rest/picture', {
+      method: 'POST',
+      body: formData,
+    })
+  ).json();
+  return {
+    name: data.filename,
+    type:
+      data.imageType === 'png'
+        ? 1
+        : data.imageType === 'jpg'
+        ? 2
+        : data.imageType === 'jpeg'
+        ? 3
+        : data.imageType === 'gif'
+        ? 4
+        : data.imageType === 'webp'
+        ? 5
+        : data.imageType,
+  };
+};
+
 const imageFromData = (data) => {
   const img = document.createElement('img');
   img.src = `https://playentry.org/uploads/${data.name.slice(0, 2)}/${data.name.slice(2, 4)}/${data.name}.${
