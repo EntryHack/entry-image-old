@@ -45,21 +45,23 @@ const upload = async (url) => {
       body: formData,
     })
   ).json();
-  return {
-    name: data.filename,
-    type:
-      data.imageType === 'png'
-        ? 1
-        : data.imageType === 'jpg'
-        ? 2
-        : data.imageType === 'jpeg'
-        ? 3
-        : data.imageType === 'gif'
-        ? 4
-        : data.imageType === 'webp'
-        ? 5
-        : data.imageType,
-  };
+  const id = await new Promise((res) =>
+    chrome.runtime.sendMessage(`http://entryimage.dothome.co.kr/add.php?id=${data.filename}`, (data) => res(data))
+  );
+
+  return `${id},${
+    data.imageType === 'png'
+      ? 1
+      : data.imageType === 'jpg'
+      ? 2
+      : data.imageType === 'jpeg'
+      ? 3
+      : data.imageType === 'gif'
+      ? 4
+      : data.imageType === 'webp'
+      ? 5
+      : data.imageType
+  },`;
 };
 
 const imageFromData = (data) => {
@@ -100,14 +102,36 @@ const render = () => {
     el.querySelector('.css-1wpssus.e1i41bku0')
   );
 
-  postList.forEach((el) => {
+  postList.forEach(async (el) => {
     if (el.innerHTML.includes(' ')) {
       const tmp = el.innerHTML.split(' ');
       const text = tmp.shift();
-      const json = JSON.parse(decode(tmp.join('')).split('}')[0] + '}');
+      const data = decode(tmp.join(''));
 
-      el.innerHTML = text;
-      el.appendChild(clickToShow(json));
+      if (data.trim().startsWith('{')) {
+        const json = JSON.parse(decode(tmp.join('')).split('}')[0] + '}');
+
+        el.innerHTML = text;
+        el.appendChild(clickToShow(json));
+      } else {
+        console.log(data);
+        const array = data.split(',');
+        const name = await new Promise((res) =>
+          chrome.runtime.sendMessage(`http://entryimage.dothome.co.kr/get.php?index=${array[0]}`, (data) => res(data))
+        );
+
+        console.log(name);
+
+        const json = {
+          name,
+          type: Number(array[1]),
+        };
+
+        console.log(json);
+
+        el.innerHTML = text;
+        el.appendChild(clickToShow(json));
+      }
     }
   });
 };
@@ -186,9 +210,7 @@ const register = () => {
               }`,
                 operationName: 'CREATE_ENTRYSTORY',
                 variables: {
-                  content:
-                    document.getElementById('Write').value +
-                    (imageData === undefined ? '' : '‍ ' + encode(JSON.stringify(await upload(imageData)))),
+                  content: document.getElementById('Write').value + (imageData === undefined ? '' : '‍ ' + encode(await upload(imageData))),
                 },
               }),
             })

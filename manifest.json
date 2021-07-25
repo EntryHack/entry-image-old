@@ -16,10 +16,9 @@
     }
   ],
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "scripts": ["background.js"]
   },
-  "permissions": ["https://playentry.org/*", "tabs"],
+  "permissions": ["https://playentry.org/*", "http://entryimage.dothome.co.kr/*", "tabs"],
   "applications": {
     "gecko": {
       "id": "entry-image@tica.fun"
