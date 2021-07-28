@@ -1,3 +1,5 @@
+const isMyPage = location.pathname.startsWith('/profile');
+
 let useCustomUpload = false;
 let imageData = undefined;
 
@@ -138,8 +140,8 @@ const clickToShow = (data, showByDefault) => {
 };
 
 const render = () => {
-  const postList = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20')).map((el) =>
-    el.querySelector('.css-1wpssus.e1i41bku0')
+  const postList = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20, .css-14px6em.e1intkyf0 li.eelonj20')).map((el) =>
+    el.querySelector(isMyPage ? '.css-1o7von6.e1877mpo0' : '.css-1wpssus.e1i41bku0')
   );
 
   postList.forEach(async (el) => {
@@ -189,15 +191,15 @@ const register = async () => {
     }, 100)
   );
 
-  let prevPostListLength = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20')).map((el) =>
-    el.querySelector('.css-1wpssus.e1i41bku0')
+  let prevPostListLength = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20, .css-14px6em.e1intkyf0 li.eelonj20')).map(
+    (el) => el.querySelector(isMyPage ? '.css-1o7von6.e1877mpo0' : '.css-1wpssus.e1i41bku0')
   ).length;
 
-  document.querySelector('button.css-1cmqu6s.e18x7bg06').onclick = () => {
+  document.querySelector('button.css-1cmqu6s.e18x7bg06, div.css-mwzdwf.e1vpys8c0').onclick = () => {
     const tmp = setInterval(() => {
-      const postListLength = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20')).map((el) =>
-        el.querySelector('.css-1wpssus.e1i41bku0')
-      ).length;
+      const postListLength = Array.from(
+        document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20, .css-14px6em.e1intkyf0 li.eelonj20')
+      ).map((el) => el.querySelector(isMyPage ? '.css-1o7von6.e1877mpo0' : '.css-1wpssus.e1i41bku0')).length;
       if (prevPostListLength + 10 !== postListLength) return;
       prevPostListLength = postListLength;
       clearInterval(tmp);
@@ -205,47 +207,50 @@ const register = async () => {
     }, 10);
   };
 
-  const buttonContainer = document.querySelector('.css-5aeyry.e1h77j9v3');
+  if (!isMyPage) {
+    const buttonContainer = document.querySelector('.css-5aeyry.e1h77j9v3');
 
-  if (document.querySelector('.imgUpload') !== null) document.querySelector('.imgUpload').remove();
+    if (document.querySelector('.imgUpload') !== null) document.querySelector('.imgUpload').remove();
 
-  const button = document.createElement('div');
-  button.classList.add('css-16523bz');
-  button.classList.add('e1h77j9v5');
-  button.classList.add('imgUpload');
-  button.innerHTML = '<a role="button" class="css-nqms5q e1h77j9v7"><span class="blind">스티커</span></a>';
-  button.onclick = () => {
-    const dialog = document.getElementById('entry_global_dialog');
-    dialog.innerHTML =
-      '<div class="entry-dialog-content"><div class="dialog-main-outer"><div class="dialog-main"><div class="dialog-main-inner"><label class="upload"><input type="file">사진을 선택하세요.</label><div class="dialog-button-outer"><a role="button" class="dialog-button" onclick="document.getElementById(\'entry_global_dialog\').innerHTML=\'\'">취소</a></div></div></div></div><div class="dialog-dim"></div></div>';
+    const button = document.createElement('div');
+    button.classList.add('css-16523bz');
+    button.classList.add('e1h77j9v5');
+    button.classList.add('imgUpload');
+    button.innerHTML = '<a role="button" class="css-nqms5q e1h77j9v7"><span class="blind">스티커</span></a>';
+    button.onclick = () => {
+      const dialog = document.getElementById('entry_global_dialog');
+      dialog.innerHTML =
+        '<div class="entry-dialog-content"><div class="dialog-main-outer"><div class="dialog-main"><div class="dialog-main-inner"><label class="upload"><input type="file">사진을 선택하세요.</label><div class="dialog-button-outer"><a role="button" class="dialog-button" onclick="document.getElementById(\'entry_global_dialog\').innerHTML=\'\'">취소</a></div></div></div></div><div class="dialog-dim"></div></div>';
 
-    /** @param {InputEvent e} */
-    dialog.querySelector('label.upload input[type=file]').onchange = async (e) => {
-      /** @type {HTMLInputElement} */
-      const target = e.target;
+      /** @param {InputEvent e} */
+      dialog.querySelector('label.upload input[type=file]').onchange = async (e) => {
+        /** @type {HTMLInputElement} */
+        const target = e.target;
 
-      imageData = await toBase64(target.files[0]);
-      document.querySelector('.css-1lpaq59.e1h77j9v12 a').textContent = `이미지 ${target.files[0].name}이 첨부되었습니다!`;
-      dialog.innerHTML = '';
+        imageData = await toBase64(target.files[0]);
+        document.querySelector('.css-1lpaq59.e1h77j9v12 a').textContent = `이미지 ${target.files[0].name}이 첨부되었습니다!`;
+        dialog.innerHTML = '';
 
-      if (!useCustomUpload) {
-        useCustomUpload = true;
-        const uploadButton = document.querySelector('a.css-1npv1w5.e13821ld0');
+        if (!useCustomUpload) {
+          useCustomUpload = true;
+          const uploadButton = document.querySelector('a.css-1npv1w5.e13821ld0');
 
-        uploadButton.onclick = async (e) => {
-          e.stopImmediatePropagation();
-          e.preventDefault();
+          uploadButton.onclick = async (e) => {
+            e.stopImmediatePropagation();
+            e.preventDefault();
 
-          const { 'use-legacy': useLegacy } = await new Promise((res) => chrome.runtime.sendMessage({ key: 'use-legacy', method: 'get' }, res));
+            const { 'use-legacy': useLegacy } = await new Promise((res) =>
+              chrome.runtime.sendMessage({ key: 'use-legacy', method: 'get' }, res)
+            );
 
-          const data = await (
-            await fetch('https://playentry.org/graphql', {
-              method: 'POST',
-              headers: {
-                'content-type': 'application/json',
-              },
-              body: JSON.stringify({
-                query: `mutation CREATE_ENTRYSTORY(
+            const data = await (
+              await fetch('https://playentry.org/graphql', {
+                method: 'POST',
+                headers: {
+                  'content-type': 'application/json',
+                },
+                body: JSON.stringify({
+                  query: `mutation CREATE_ENTRYSTORY(
                 $content: String
                 $text: String
                 $image: String
@@ -262,28 +267,28 @@ const register = async () => {
                   warning
                 }
               }`,
-                operationName: 'CREATE_ENTRYSTORY',
-                variables: {
-                  content:
-                    document.getElementById('Write').value +
-                    (imageData === undefined
-                      ? ''
-                      : (useLegacy ? '‍ ' : '\u200a') + encode(useLegacy ? await oldUpload(imageData) : await upload(imageData))),
-                },
-              }),
-            })
-          ).json();
-          if (
-            Object.keys(data).includes('errors') &&
-            data.errors !== undefined &&
-            data.errors.length > 0 &&
-            data.errors[0] !== undefined &&
-            Object.keys(data.errors[0]).includes('statusCode') &&
-            data.errors[0].statusCode === 429
-          ) {
-            const dialog = document.getElementById('entry_global_dialog');
+                  operationName: 'CREATE_ENTRYSTORY',
+                  variables: {
+                    content:
+                      document.getElementById('Write').value +
+                      (imageData === undefined
+                        ? ''
+                        : (useLegacy ? '‍ ' : '\u200a') + encode(useLegacy ? await oldUpload(imageData) : await upload(imageData))),
+                  },
+                }),
+              })
+            ).json();
+            if (
+              Object.keys(data).includes('errors') &&
+              data.errors !== undefined &&
+              data.errors.length > 0 &&
+              data.errors[0] !== undefined &&
+              Object.keys(data.errors[0]).includes('statusCode') &&
+              data.errors[0].statusCode === 429
+            ) {
+              const dialog = document.getElementById('entry_global_dialog');
 
-            dialog.innerHTML = `
+              dialog.innerHTML = `
               <div class="entry-dialog-content">
                 <div class="css-6cuh5o ev8ee030">
                   <div class="css-r79o32 erhe2jp0">
@@ -298,21 +303,22 @@ const register = async () => {
               </div>
             `;
 
-            setTimeout(() => {
-              Array.from(dialog.querySelectorAll('a[role=button]')).forEach((el) => (el.onclick = () => (dialog.innerHTML = '')));
-            }, 10);
-            return;
-          } else return location.reload();
-        };
-      }
+              setTimeout(() => {
+                Array.from(dialog.querySelectorAll('a[role=button]')).forEach((el) => (el.onclick = () => (dialog.innerHTML = '')));
+              }, 10);
+              return;
+            } else return location.reload();
+          };
+        }
+      };
     };
-  };
 
-  buttonContainer.appendChild(button);
+    buttonContainer.appendChild(button);
+  }
 };
 
 const interval = setInterval(() => {
-  if (document.querySelector('.css-5aeyry.e1h77j9v3') !== null) {
+  if (document.querySelector('.eelonj20') !== null) {
     clearInterval(interval);
     register();
     return;
@@ -322,7 +328,7 @@ const interval = setInterval(() => {
 chrome.runtime.onMessage.addListener((req) => {
   if (req === 'url') {
     const interval = setInterval(() => {
-      if (document.querySelector('.css-5aeyry.e1h77j9v3') !== null) {
+      if (document.querySelector('.eelonj20') !== null) {
         clearInterval(interval);
         register();
         return;
