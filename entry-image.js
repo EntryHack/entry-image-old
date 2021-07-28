@@ -119,16 +119,20 @@ const imageFromData = (data) => {
   return img.outerHTML;
 };
 
-const clickToShow = (data) => {
+const clickToShow = (data, showByDefault) => {
   const div = document.createElement('div');
-  div.innerHTML = '<div class="e-warning">이미지가 포함된 게시글입니다. 이미지를 표시하시겠습니까?<a class="e-show">표시</a></div>';
 
-  const interval = setInterval(() => {
-    const tmp = div.querySelector('a.e-show');
-    if (tmp === null) return;
-    tmp.onclick = () => (div.innerHTML = imageFromData(data));
-    clearInterval(interval);
-  }, 10);
+  if (showByDefault) div.innerHTML = imageFromData(data);
+  else {
+    div.innerHTML = '<div class="e-warning">이미지가 포함된 게시글입니다. 이미지를 표시하시겠습니까?<a class="e-show">표시</a></div>';
+
+    const interval = setInterval(() => {
+      const tmp = div.querySelector('a.e-show');
+      if (tmp === null) return;
+      tmp.onclick = () => (div.innerHTML = imageFromData(data));
+      clearInterval(interval);
+    }, 10);
+  }
 
   return div;
 };
@@ -164,7 +168,12 @@ const render = () => {
           }
         })();
         el.innerHTML = text.replace(/( |\u200c|\u200b|‍)/, ' ');
-        el.appendChild(clickToShow(json));
+
+        const { 'always-show': alwaysShow } = await new Promise((res) =>
+          chrome.runtime.sendMessage({ key: 'always-show', method: 'get' }, res)
+        );
+
+        el.appendChild(clickToShow(json, alwaysShow));
       }
     } catch (_) {
       console.log(_);
