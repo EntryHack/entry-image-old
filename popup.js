@@ -4,7 +4,7 @@ window.addEventListener('load', () => {
 
   const toast = new bootstrap.Toast(document.querySelector('.toast'));
 
-  [(alwaysShow, useLegacy)].forEach((el) =>
+  [alwaysShow, useLegacy].forEach((el) =>
     chrome.runtime.sendMessage({ key: el.id, method: 'get' }, (value) => {
       el.checked = value[el.id];
       el.parentNode.querySelector('.text').textContent = value[el.id] ? '활성화' : '비활성화';

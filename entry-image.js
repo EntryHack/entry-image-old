@@ -141,7 +141,7 @@ const clickToShow = (data, showByDefault) => {
 
 const render = () => {
   const postList = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20, .css-14px6em.e1intkyf0 li.eelonj20')).map((el) =>
-    el.querySelector(isMyPage ? '.css-1o7von6.e1877mpo0' : '.css-1wpssus.e1i41bku0')
+    el.querySelector('.css-1wpssus.e1i41bku0')
   );
 
   postList.forEach(async (el) => {
@@ -192,14 +192,14 @@ const register = async () => {
   );
 
   let prevPostListLength = Array.from(document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20, .css-14px6em.e1intkyf0 li.eelonj20')).map(
-    (el) => el.querySelector(isMyPage ? '.css-1o7von6.e1877mpo0' : '.css-1wpssus.e1i41bku0')
+    (el) => el.querySelector('.css-1wpssus.e1i41bku0')
   ).length;
 
   document.querySelector('button.css-1cmqu6s.e18x7bg06, div.css-mwzdwf.e1vpys8c0').onclick = () => {
     const tmp = setInterval(() => {
       const postListLength = Array.from(
         document.querySelectorAll('.css-1i5jedo.e18x7bg05 li.eelonj20, .css-14px6em.e1intkyf0 li.eelonj20')
-      ).map((el) => el.querySelector(isMyPage ? '.css-1o7von6.e1877mpo0' : '.css-1wpssus.e1i41bku0')).length;
+      ).map((el) => el.querySelector('.css-1wpssus.e1i41bku0')).length;
       if (prevPostListLength + 10 !== postListLength) return;
       prevPostListLength = postListLength;
       clearInterval(tmp);
