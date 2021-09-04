@@ -1,5 +1,8 @@
 나를읽어.마크다운
 
+# 개발 중단!
+[EntryHack/entry-uploader](https://github.com/EntryHack/entry-uploader) 을 사용해주세요!
+
 # entry-image
 
 entry-image는 엔트리 커뮤니티에 이미지를 올릴 수 있도록 도와주는 확장 프로그램이에요.
